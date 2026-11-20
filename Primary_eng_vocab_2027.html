@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>⭐ 英文生字比拼遊戲 ⭐</title>
+<style>
+  html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "Comic Sans MS", sans-serif;
+    background: linear-gradient(180deg, #a8e0ff, #8ee3f5, #f9f9f9);
+    transition: background 1s ease;
+    position: relative;
+  }
+  @keyframes twinkle {
+    0%,100% { opacity: 0.3; transform: scale(1);}
+    50% { opacity: 1; transform: scale(1.3);}
+  }
+  .star {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    background: #fffbd1;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #fff;
+    animation: twinkle 2.5s infinite;
+  }
+  #game-container {
+    width: 90%;
+    max-width: 1200px;
+    min-height: 600px;
+    background: rgba(255,255,255,0.92);
+    border-radius: 25px;
+    box-shadow: 0 0 35px rgba(0, 150, 255, 0.6);
+    padding: 30px;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+    overflow-y: auto;
+    max-height: 90vh;
+  }
+  h1, h2 {
+    color: #005bbb;
+    text-shadow: 0 0 8px #ffb347;
+    margin-bottom: 20px;
+  }
+  button {
+    background: linear-gradient(90deg, #ffd861, #ffb347);
+    color: #002244;
+    border: none;
+    border-radius: 16px;
+    padding: 15px 30px;
+    font-size: 22px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.3s ease;
+    margin: 10px;
+  }
+  button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 15px #ffaa00;
+  }
+  button:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+  .option {
+    display: block;
+    width: 90%;
+    margin: 20px auto;
+    font-size: 24px;
+  }
+  .hidden { display: none; }
+  #question {
+    font-size: 32px;
+    font-weight: bold;
+    margin: 20px 0;
+    color: #002266;
+    min-height: 60px;
+  }
+  #result {
+    margin-top: 20px;
+    font-weight: bold;
+    font-size: 22px;
+    color: #ff6600;
+    min-height: 40px;
+  }
+  #scoreboard {
+    margin-top: 15px;
+    font-size: 20px;
+    color: #0077cc;
+  }
+  .wrong-list-style {
+    background: rgba(255, 240, 240, 0.8);
+    border: 2px dashed #ff6666;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px auto;
+    width: 90%;
+    max-height: 200px;
+    overflow-y: auto;
+    text-align: left;
+    font-size: 18px;
+    line-height: 1.6;
+    color: #333;
+  }
+  .category-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 30px 0;
+  }
+  .category-card {
+    background: rgba(255, 255, 255, 0.9);
+    border: 3px solid #4CAF50;
+    border-radius: 15px;
+    padding: 20px;
+    width: 250px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  }
+  .category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+  }
+  .category-card.selected {
+    background: linear-gradient(135deg, #4CAF50, #8BC34A);
+    color: white;
+    border-color: #388E3C;
+  }
+  .category-card h3 {
+    margin: 0 0 10px 0;
+    color: #2E7D32;
+  }
+  .category-card.selected h3 {
+    color: white;
+  }
+  .category-card p {
+    margin: 5px 0;
+    font-size: 14px;
+    color: #666;
+  }
+  .category-card.selected p {
+    color: rgba(255,255,255,0.9);
+  }
+  .category-checkbox {
+    display: none;
+  }
+  .selection-info {
+    background: #e3f2fd;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 18px;
+    color: #1565c0;
+  }
+  .category-stats {
+    display: flex;
+    justify-content: space-around;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .stat-item {
+    background: #f5f5f5;
+    border-radius: 10px;
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+  }
+  #category-screen {
+    text-align: center;
+  }
+  #selected-count {
+    font-weight: bold;
+    color: #d32f2f;
+    font-size: 1.2em;
+  }
+</style>
+</head>
+<body>
+  <div class="star" style="top:10%;left:15%;animation-delay:0s;"></div>
+  <div class="star" style="top:25%;left:55%;animation-delay:1s;"></div>
+  <div class="star" style="top:70%;left:35%;animation-delay:0.5s;"></div>
+  <div class="star" style="top:80%;left:80%;animation-delay:1.2s;"></div>
+  <div class="star" style="top:50%;left:10%;animation-delay:0.8s;"></div>
+  
+  <div id="game-container">
+    <!-- 開始畫面 -->
+    <div id="start-screen">
+      <h1>⭐ 英語生字皇遊戲 ⭐</h1>
+      <p style="font-size: 20px; color: #555; margin-bottom: 30px;">選擇您想要練習的單詞類別，開始挑戰！</p>
+      <button id="start-btn">開始選擇類別</button>
+    </div>
+    <!-- 分類選擇畫面 -->
+    <div id="category-screen" class="hidden">
+      <h2>🎯 選擇測驗類別</h2>
+      <p style="font-size: 18px; color: #666; margin-bottom: 20px;">請選擇至少一個類別（可多選），系統將從選擇的類別中隨機抽取10題</p>
+      
+      <div class="selection-info">
+        已選擇：<span id="selected-count">0</span> 個類別
+      </div>
+      <div class="category-container">
+        <!-- 類別1：日常生活 -->
+        <div class="category-card" onclick="toggleCategory(1)">
+          <input type="checkbox" class="category-checkbox" id="category1" data-category="1">
+          <h3>🏠 小一生活單詞</h3>
+          <p>• 家庭與家居</p>
+          <p>• 日常活動</p>
+          <p>• 基本需求</p>
+          <p>📊 共10題</p>
+        </div>
+        <!-- 類別2：學術教育 -->
+        <div class="category-card" onclick="toggleCategory(2)">
+          <input type="checkbox" class="category-checkbox" id="category2" data-category="2">
+          <h3>🎓 小二教育單詞</h3>
+          <p>• 學校科目</p>
+          <p>• 交通工具</p>
+          <p>• 日常相關</p>
+          <p>📊 共10題</p>
+        </div>
+        <!-- 類別3：過去式 -->
+        <div class="category-card" onclick="toggleCategory(3)">
+          <input type="checkbox" class="category-checkbox" id="category3" data-category="3">
+          <h3>💼 小三初小單詞</h3>
+          <p>• 食物術語</p>
+          <p>• 動詞溝通</p>
+          <p>• 生活相關</p>
+          <p>📊 共10題</p>
+        </div>
+        <!-- 類別4：小四 -->
+        <div class="category-card" onclick="toggleCategory(4)">
+          <input type="checkbox" class="category-checkbox" id="category4" data-category="4">
+          <h3>🔬 小四躍升單詞</h3>
+          <p>• 科學技術</p>
+          <p>• 性格形容</p>
+          <p>• 地方指示</p>
+          <p>📊 原有85題 + 200題最難生字</p>
+        </div>
+        <!-- 類別5：人文社會 -->
+        <div class="category-card" onclick="toggleCategory(5)">
+          <input type="checkbox" class="category-checkbox" id="category5" data-category="5">
+          <h3>🌍 小五呈分單詞</h3>
+          <p>• 文化藝術</p>
+          <p>• 社會問題</p>
+          <p>• 心理情感</p>
+          <p>📊 原有78題 + 250題最難生字</p>
+        </div>
+        <!-- 類別6：小六英文單詞 -->
+        <div class="category-card" onclick="toggleCategory(6)">
+          <input type="checkbox" class="category-checkbox" id="category6" data-category="6">
+          <h3>🌍 小六英文單詞</h3>
+          <p>• 職業理想</p>
+          <p>• 社會時事</p>
+          <p>• 心理性格</p>
+          <p>📊 原有54題 + 50題最難生字</p>
+        </div>
+      </div>
+      <div class="category-stats">
+        <div class="stat-item">總題庫：1000題以上</div>
+        <div class="stat-item">每場測驗：10題</div>
+        <div class="stat-item">可多類別組合</div>
+      </div>
+      <button id="start-quiz-btn" disabled>開始測驗 🚀</button>
+      <button onclick="showScreen('start-screen')">返回主頁</button>
+    </div>
+    <!-- 測驗畫面 -->
+    <div id="quiz-screen" class="hidden">
+      <div id="question"></div>
+      <button id="speak-word">🔊 朗讀題目</button>
+      <div id="options"></div>
+      <div id="result"></div>
+      <div id="scoreboard"></div>
+      <button id="next-btn" class="hidden">下一題 ➡️</button>
+    </div>
+    <!-- 結束畫面 -->
+    <div id="end-screen" class="hidden">
+      <h2>🎉 遊戲完結！ 🎉</h2>
+      <p id="final-score"></p>
+      <p id="wrong-list" class="wrong-list-style"></p>
+      <button onclick="showScreen('category-screen')">再玩一次</button>
+      <button onclick="showScreen('start-screen')">返回主頁</button>
+    </div>
+  </div>
+<script>
+// 完整的單詞測驗題庫
+const quizQuestions = {
+  // 類別1：日常生活單詞 (10題)
+  category1: [
+    { "question": "單詞 'book' 的中文意思是？", "options": ["A. 筆", "B. 書", "C. 橡皮", "D. 尺子"], "correctAnswer": "B. 書" }
+    // ← 請將你原有的 category1 全部題目放回此處
+  ],
+  // 類別2：學術教育單詞 (10題)
+  category2: [
+    { "question": "單詞 'litter' 的中文意思是？", "options": ["A. 燒垃圾", "B. 埋垃圾", "C. 亂丟垃圾", "D. 撿垃圾"], "correctAnswer": "C. 亂丟垃圾" }
+    // ← 請將你原有的 category2 全部題目放回此處
+  ],
+  // 類別3：小三單詞 (110題)
+  category3: [
+    { "question": "單詞 'naughty' 的中文意思是？", "options": ["A. 聽話的", "B. 調皮的", "C. 聰明的", "D. 膽小的"], "correctAnswer": "B. 調皮的" }
+    // ← 請將你原有的 category3 全部題目放回此處
+  ],
+  // 類別4：小四單詞 (85題 + 200題最難生字)
+  category4: [
+    { "question": "單詞 'hamster' 的中文意思是？", "options": ["A. 倉鼠", "B. 兔子", "C. 老鼠", "D. 松鼠"], "correctAnswer": "A. 倉鼠" }
+    // ← 請將你原有的 category4 全部85題放回此處
+  ],
+  // 類別5：小五單詞 (78題 + 250題最難生字)
+  category5: [
+    { "question": "單詞 'pedestrian' 的中文意思是？", "options": ["A. 司機", "B. 行人", "C. 騎士", "D. 乘客"], "correctAnswer": "B. 行人" },
+    { "question": "單詞 'footbridge' 的中文意思是？", "options": ["A. 隧道", "B. 天橋", "C. 地下通道", "D. 斑馬線"], "correctAnswer": "B. 天橋" }
+    // ← 請將你原有的 category5 全部78題放回此處
+  ],
+  // 類別6：小六單詞 (54題 + 50題最難生字)
+  category6: [
+    { "question": "單詞 'architect' 的中文意思是？", "options": ["A. 醫生", "B. 護士", "C. 建築師", "D. 教師"], "correctAnswer": "C. 建築師" }
+    // ← 請將你原有的 category6 全部54題放回此處
+  ]
+};
+
+// ===== 小四：200個最難生字（新增）=====
+const extraWordsP4 = [
+  {word: 'sandcastle', meaning: '沙堡'}, {word: 'souvenir', meaning: '紀念品'}, {word: 'performer', meaning: '表演者'}, {word: 'barbecue', meaning: '燒烤'}, {word: 'karate', meaning: '空手道'}, {word: 'jigsaw puzzle', meaning: '拼圖'}, {word: 'challenging', meaning: '具挑戰性的'}, {word: 'roller skating', meaning: '溜冰'}, {word: 'ukulele', meaning: '尤克里里'}, {word: 'magician', meaning: '魔術師'}, {word: 'magic trick', meaning: '魔術'}, {word: 'free time', meaning: '空閒時間'}, {word: 'health', meaning: '健康'}, {word: 'invite', meaning: '邀請'}, {word: 'count me in', meaning: '算我一個'}, {word: 'could not believe her eyes', meaning: '不敢相信自己的眼睛'},
+  {word: 'decoration', meaning: '裝飾'}, {word: 'ribbon', meaning: '緞帶'}, {word: 'crowded', meaning: '擠滿人的'}, {word: 'festive joy', meaning: '節日氣氛'}, {word: 'campus', meaning: '校園'}, {word: 'scarf', meaning: '圍巾'}, {word: 'pasta', meaning: '意大利麵'}, {word: 'bread pudding', meaning: '麵包布甸'}, {word: 'snowman', meaning: '雪人'}, {word: 'skiing', meaning: '滑雪'}, {word: 'pounce', meaning: '猛撲'}, {word: 'accident', meaning: '意外'}, {word: 'explain', meaning: '解釋'}, {word: 'careless', meaning: '粗心的'}, {word: 'get upset', meaning: '不高興'}, {word: 'fault', meaning: '過錯'}, {word: 'shake hands', meaning: '握手'}, {word: 'skateboarding', meaning: '滑板運動'},
+  {word: 'report card', meaning: '成績表'}, {word: 'smartest', meaning: '最聰明的'}, {word: 'caring', meaning: '關心別人的'}, {word: 'popular', meaning: '受歡迎的'}, {word: 'excellent', meaning: '優秀的'}, {word: 'teammate', meaning: '隊友'}, {word: 'monitor', meaning: '班長'}, {word: 'humble', meaning: '謙虛的'}, {word: 'neat', meaning: '整潔的'}, {word: 'hard-working', meaning: '勤力的'}, {word: 'recess', meaning: '小息'}, {word: 'choir', meaning: '合唱團'}, {word: 'haircut', meaning: '剪頭髮'}, {word: 'weak', meaning: '虛弱的'}, {word: 'detective', meaning: '偵探的'}, {word: 'horror story', meaning: '恐怖故事'}, {word: 'frightening', meaning: '可怕的'}, {word: 'brave', meaning: '勇敢的'},
+  {word: 'book review', meaning: '書評'}, {word: 'detective series', meaning: '偵探系列'}, {word: 'mystery', meaning: '謎團'}, {word: 'haunted house', meaning: '鬼屋'}, {word: 'touching', meaning: '感人的'}, {word: 'surprising', meaning: '令人驚訝的'}, {word: 'sleepwalker', meaning: '夢遊者'}, {word: 'strange', meaning: '奇怪的'}, {word: 'rolling', meaning: '滾動'}, {word: 'turn out', meaning: '結果是'}, {word: 'discussion forum', meaning: '討論區'}, {word: 'teenage', meaning: '青少年的'}, {word: 'daytime', meaning: '白天'}, {word: 'medicine', meaning: '藥'}, {word: 'get worse', meaning: '變得更糟'}, {word: 'director', meaning: '導演'}, {word: 'comedy', meaning: '喜劇'},
+  {word: 'roast', meaning: '烤'}, {word: 'turkey', meaning: '火雞'}, {word: 'exchange gifts', meaning: '交換禮物'}, {word: 'decorate', meaning: '裝飾'}, {word: 'giant', meaning: '巨大的'}, {word: 'freezing', meaning: '冰冷的'}, {word: 'feast', meaning: '盛宴'}, {word: 'craft', meaning: '手工'}, {word: 'button', meaning: '鈕扣'}, {word: 'Irish', meaning: '愛爾蘭的'}, {word: 'celebrate', meaning: '慶祝'}, {word: 'priest', meaning: '神父'}, {word: 'clover', meaning: '幸運草'}, {word: 'three-leaf', meaning: '三葉的'}, {word: 'rare', meaning: '稀有的'}, {word: 'faith', meaning: '信念'}, {word: 'folklore', meaning: '民間傳說'}, {word: 'pinch', meaning: '捏'},
+  {word: 'resolution', meaning: '決心'}, {word: 'absent', meaning: '缺席的'}, {word: 'catch up with', meaning: '追上'}, {word: 'improve', meaning: '改善'}, {word: 'revision', meaning: '溫習'}, {word: 'timetable', meaning: '時間表'}, {word: 'punctual', meaning: '準時的'}, {word: 'alarm clock', meaning: '鬧鐘'}, {word: 'wake up on time', meaning: '準時起床'}, {word: 'performance', meaning: '表演'}, {word: 'dim sum', meaning: '點心'}, {word: 'hiking', meaning: '遠足'}, {word: 'grandmother', meaning: '祖母'}, {word: 'can\'t wait', meaning: '迫不及待'}, {word: 'keep it up', meaning: '繼續努力'},
+  {word: 'menu', meaning: '菜單'}, {word: 'lobster', meaning: '龍蝦'}, {word: 'prawn', meaning: '蝦'}, {word: 'oyster', meaning: '蠔'}, {word: 'mussel', meaning: '青口'}, {word: 'charcoal grill', meaning: '炭火烤爐'}, {word: 'barbecue flavour', meaning: '燒烤風味'}, {word: 'bacon', meaning: '煙肉'}, {word: 'avocado', meaning: '牛油果'}, {word: 'grapefruit', meaning: '西柚'}, {word: 'vanilla', meaning: '雲呢拿'}, {word: 'vegetarian', meaning: '素食者'}, {word: 'food label', meaning: '食物標籤'}, {word: 'energy', meaning: '能量'}, {word: 'protein', meaning: '蛋白質'}, {word: 'allergic', meaning: '過敏的'}, {word: 'dairy product', meaning: '乳製品'}, {word: 'country of origin', meaning: '原產地'}, {word: 'local farm', meaning: '本地農場'}, {word: 'fridge', meaning: '雪櫃'},
+  {word: 'recipe', meaning: '食譜'}, {word: 'ingredient', meaning: '材料'}, {word: 'serving', meaning: '一人份'}, {word: 'sushi rice', meaning: '壽司米'}, {word: 'rice vinegar', meaning: '米醋'}, {word: 'sesame oil', meaning: '芝麻油'}, {word: 'sesame seed', meaning: '芝麻'}, {word: 'soy sauce', meaning: '豉油'}, {word: 'tuna fillet', meaning: '吞拿魚柳'}, {word: 'sprinkle', meaning: '撒'}, {word: 'wasabi', meaning: '芥辣'}, {word: 'play script', meaning: '劇本'}, {word: 'scene', meaning: '場景'}, {word: 'spaghetti', meaning: '意大利粉'}, {word: 'washroom', meaning: '洗手間'}, {word: 'cupcake', meaning: '杯子蛋糕'}, {word: 'no wonder', meaning: '難怪'},
+  {word: 'festival', meaning: '節慶'}, {word: 'fishing village', meaning: '漁村'}, {word: 'egg waffle', meaning: '雞蛋仔'}, {word: 'fish ball', meaning: '魚蛋'}, {word: 'tea cake', meaning: '茶果'}, {word: 'showroom', meaning: '展覽室'}, {word: 'fishing tool', meaning: '漁具'}, {word: 'Tanka', meaning: '蜑家'}, {word: 'stilt house', meaning: '高腳屋'}, {word: 'shuttle bus', meaning: '穿梭巴士'}, {word: 'skeleton', meaning: '骨骼'}, {word: 'exhibition', meaning: '展覽'}, {word: 'souvenir shop', meaning: '紀念品店'}, {word: 'flash', meaning: '閃光燈'}, {word: 'dinosaur egg', meaning: '恐龍蛋'}, {word: 'entrance', meaning: '入口'},
+  {word: 'brochure', meaning: '宣傳冊'}, {word: 'opening hours', meaning: '開放時間'}, {word: 'depart', meaning: '出發'}, {word: 'interact', meaning: '互動'}, {word: 'behaviour', meaning: '行為'}, {word: 'sea lion', meaning: '海獅'}, {word: 'mascot', meaning: '吉祥物'}, {word: 'reserve', meaning: '預訂'}, {word: 'parade', meaning: '巡遊'}, {word: 'parade float', meaning: '花車'}, {word: 'funfair', meaning: '嘉年華會'}, {word: 'game booth', meaning: '遊戲攤位'}, {word: 'jumping castle', meaning: '充氣城堡'}, {word: 'face painting', meaning: '面部彩繪'}, {word: 'photo booth', meaning: '拍照亭'}, {word: 'lucky draw', meaning: '幸運抽獎'}, {word: 'eReader', meaning: '電子書閱讀器'},
+  {word: 'campsite', meaning: '營地'}, {word: 'facility', meaning: '設施'}, {word: 'treasure hunt', meaning: '尋寶'}, {word: 'route', meaning: '路線'}, {word: 'barbecue pit', meaning: '燒烤爐'}, {word: 'charcoal', meaning: '木炭'}, {word: 'cooking space', meaning: '煮食區'}, {word: 'kite flying', meaning: '放風箏'}, {word: 'package', meaning: '套餐'}, {word: 'parking space', meaning: '泊車位'}, {word: 'hiking trail', meaning: '遠足徑'}, {word: 'set up', meaning: '搭（帳篷）'}, {word: 'confused', meaning: '混亂的'}, {word: 'carelessly', meaning: '粗心地'}, {word: 'distance', meaning: '距離'}, {word: 'marshmallow', meaning: '棉花糖'},
+  {word: 'leaflet', meaning: '宣傳單張'}, {word: 'safari park', meaning: '野生動物園'}, {word: 'caretaker', meaning: '飼養員'}, {word: 'habitat', meaning: '棲息地'}, {word: 'zip line', meaning: '高空滑索'}, {word: 'once-in-a-lifetime', meaning: '一生一次的'}
+];
+
+// ===== 小五：250個最難生字（原有100 + 新抽150）=====
+const extraWords = [
+  {word: 'patted', meaning: '輕拍'}, {word: 'replied', meaning: '回答'}, {word: 'deceive', meaning: '欺騙'}, {word: 'disappointed', meaning: '失望的'}, {word: 'anxious', meaning: '焦慮的'}, {word: 'upset', meaning: '難過的'}, {word: 'furious', meaning: '憤怒的'}, {word: 'fierce', meaning: '兇猛的'}, {word: 'wicked', meaning: '邪惡的'}, {word: 'rude', meaning: '粗魯的'}, {word: 'silly', meaning: '愚蠢的'}, {word: 'honest', meaning: '誠實的'}, {word: 'poisonous', meaning: '有毒的'}, {word: 'sweat', meaning: '流汗'}, {word: 'colour-blind', meaning: '色盲'}, {word: 'breed', meaning: '品種'}, {word: 'announced', meaning: '宣布'}, {word: 'release', meaning: '推出'}, {word: 'ranked', meaning: '排名'}, {word: 'band', meaning: '樂隊'}, {word: 'success', meaning: '成功'}, {word: 'best-known', meaning: '最有名的'}, {word: 'concert', meaning: '音樂會'}, {word: 'tour', meaning: '巡迴演出'}, {word: 'issue', meaning: '期刊'}, {word: 'including', meaning: '包括'}, {word: 'Philippines', meaning: '菲律賓'}, {word: 'compose', meaning: '作曲'}, {word: 'drums', meaning: '鼓'}, {word: 'promised', meaning: '答允'}, {word: 'environment', meaning: '環境'}, {word: 'special', meaning: '特別的'}, {word: 'suggested', meaning: '建議'}, {word: 'drama', meaning: '戲劇'}, {word: 'scene', meaning: '場景'}, {word: 'recess', meaning: '休息時間'}, {word: 'hopscotch', meaning: '跳房子'}, {word: 'sobbing', meaning: '嗚咽'}, {word: 'scold', meaning: '責罵'}, {word: 'cactus', meaning: '仙人掌'}, {word: 'spines', meaning: '刺'}, {word: 'sword', meaning: '劍'}, {word: 'nosebleeds', meaning: '流鼻血'}, {word: 'pick', meaning: '挖'}, {word: 'breathe', meaning: '呼吸'}, {word: 'blood vessels', meaning: '血管'}, {word: 'forward', meaning: '向前'}, {word: 'pinch', meaning: '捏'}, {word: 'outside', meaning: '外面'}, {word: 'world', meaning: '世界'}, {word: 'petroleum jelly', meaning: '凡士林'}, {word: 'dizzy', meaning: '頭暈'}, {word: 'squirrel', meaning: '松鼠'}, {word: 'naughty', meaning: '頑皮的'}, {word: 'enemies', meaning: '敵人'}, {word: 'ignored', meaning: '忽視'}, {word: 'credit card', meaning: '信用卡'}, {word: 'products', meaning: '產品'}, {word: 'return', meaning: '退回'}, {word: 'jewellery', meaning: '珠寶'}, {word: 'species', meaning: '品種'}, {word: 'echoes', meaning: '回聲'}, {word: 'except', meaning: '除了'}, {word: 'vampire', meaning: '吸血鬼'}, {word: 'mammals', meaning: '哺乳動物'}, {word: 'feathers', meaning: '羽毛'}, {word: 'insects', meaning: '昆蟲'}, {word: 'reproduction', meaning: '繁殖'}, {word: 'pup', meaning: '幼崽'}, {word: 'facilities', meaning: '設施'}, {word: 'existing', meaning: '現存的'}, {word: 'located', meaning: '位於'}, {word: 'satellite', meaning: '衛星'}, {word: 'equipped', meaning: '裝備'}, {word: 'lounge area', meaning: '休息室'}, {word: 'renovation', meaning: '翻新'}, {word: 'roundabout', meaning: '旋轉木馬'}, {word: 'climbing frame', meaning: '攀爬架'}, {word: 'sandpit', meaning: '沙坑'}, {word: 'slide', meaning: '滑梯'}, {word: 'inform', meaning: '通知'}, {word: 'period', meaning: '時段'}, {word: 'equipment', meaning: '設備'}, {word: 'in advance', meaning: '預先'}, {word: 'support', meaning: '支持'}, {word: 'contact', meaning: '聯絡'}, {word: 'enjoyable', meaning: '享受的'}, {word: 'safe', meaning: '安全的'}, {word: 'voice', meaning: '聲音'}, {word: 'fragile', meaning: '易碎的'}, {word: 'French', meaning: '法國人'}, {word: 'wine', meaning: '酒'}, {word: 'croissants', meaning: '牛角麵包'}, {word: 'mineral water', meaning: '礦泉水'}, {word: 'remembered', meaning: '記得'}, {word: 'stared at', meaning: '盯'}, {word: 'cheat', meaning: '欺騙'}, {word: 'forcefully', meaning: '強迫地'}, {word: 'nervous', meaning: '緊張的'}, {word: 'punish', meaning: '懲罰'},
+  {word: 'delightful', meaning: '令人愉快的'}, {word: 'fascinating', meaning: '迷人的'}, {word: 'festive', meaning: '節日的'}, {word: 'displays', meaning: '展示'}, {word: 'venue', meaning: '場地'}, {word: 'belongings', meaning: '財物'}, {word: 'footbridge', meaning: '人行天橋'}, {word: 'recommend', meaning: '推薦'}, {word: 'stinky tofu', meaning: '臭豆腐'}, {word: 'blame', meaning: '責備'}, {word: 'attractions', meaning: '景點'}, {word: 'inexpensive', meaning: '廉價的'}, {word: 'explore', meaning: '探索'}, {word: 'stilts', meaning: '高腳屋'}, {word: 'waterways', meaning: '水道'}, {word: 'historic', meaning: '歷史的'}, {word: 'heritage', meaning: '遺產'}, {word: 'full-sized', meaning: '全尺寸的'}, {word: 'native', meaning: '本土的'}, {word: 'decent', meaning: '合理的'}, {word: 'bargaining', meaning: '討價還價'}, {word: 'imagine', meaning: '想像'}, {word: 'backdrop', meaning: '背景'}, {word: 'rainbow-coloured', meaning: '彩虹色的'}, {word: 'estate', meaning: '屋邨'}, {word: 'forum', meaning: '論壇'}, {word: 'showering', meaning: '淋浴'}, {word: 'rinse', meaning: '沖洗'}, {word: 'body wash', meaning: '沐浴露'}, {word: 'patience', meaning: '耐心'}, {word: 'encouraged', meaning: '鼓勵'}, {word: 'comb', meaning: '梳頭'}, {word: 'button', meaning: '扣鈕'}, {word: 'smartphone', meaning: '智能手機'}, {word: 'scrolled', meaning: '滾動'}, {word: 'social media', meaning: '社交媒體'}, {word: 'online lessons', meaning: '網課'}, {word: 'dashed', meaning: '衝'}, {word: 'tablet', meaning: '平板電腦'}, {word: 'itchy', meaning: '癢的'}, {word: 'catalogue', meaning: '目錄'}, {word: 'gadgets', meaning: '小工具'}, {word: 'unlock', meaning: '解鎖'}, {word: 'battery', meaning: '電池'}, {word: 'charging', meaning: '充電'}, {word: 'display', meaning: '顯示屏'}, {word: 'smoothly', meaning: '順滑地'}, {word: 'waterproof', meaning: '防水'}, {word: 'payment', meaning: '付款'}, {word: 'grocery', meaning: '雜貨'}, {word: 'slippery', meaning: '濕滑的'}, {word: 'browse', meaning: '瀏覽'}, {word: 'ratings', meaning: '評分'}, {word: 'goods', meaning: '商品'}, {word: 'checkout', meaning: '結帳'}, {word: 'leaflet', meaning: '傳單'}, {word: 'barn', meaning: '穀倉'}, {word: 'fertiliser', meaning: '肥料'}, {word: 'expert', meaning: '專家'}, {word: 'seasonal', meaning: '季節性的'}, {word: 'harvest', meaning: '收割'}, {word: 'coupon', meaning: '優惠券'}, {word: 'early bird', meaning: '早鳥'}, {word: 'snowfall', meaning: '降雪'}, {word: 'Scouts', meaning: '童軍'}, {word: 'uneasy', meaning: '不安'}, {word: 'strangers', meaning: '陌生人'}, {word: 'conversation', meaning: '對話'}, {word: 'phrases', meaning: '短語'}, {word: 'sums', meaning: '計算'}, {word: 'monster', meaning: '怪物'}, {word: 'frightened', meaning: '害怕'}, {word: 'beggar', meaning: '乞丐'}, {word: 'feast', meaning: '盛宴'}, {word: 'uncomfortable', meaning: '不舒服'}, {word: 'whispering', meaning: '耳語'}, {word: 'backyard', meaning: '後院'}, {word: 'lighted', meaning: '點亮的'}, {word: 'firecrackers', meaning: '鞭炮'}, {word: 'deafening', meaning: '震耳欲聾'}, {word: 'weapons', meaning: '武器'}, {word: 'blessings', meaning: '祝福'}, {word: 'ink', meaning: '墨水'}, {word: 'brushes', meaning: '毛筆'}, {word: 'behind the scenes', meaning: '幕後'}, {word: 'freshen up', meaning: '振奮'}, {word: 'classics', meaning: '經典'}, {word: 'wise', meaning: '明智'}, {word: 'builders', meaning: '建築工人'}, {word: 'salutes', meaning: '致敬'}, {word: 'community', meaning: '社區'}, {word: 'tutorial', meaning: '輔導'}, {word: 'progress', meaning: '進步'}, {word: 'volunteer', meaning: '義工'}, {word: 'tutor', meaning: '導師'}, {word: 'patiently', meaning: '耐心地'}, {word: 'founder', meaning: '創辦人'}, {word: 'principal', meaning: '校長'}, {word: 'programme', meaning: '計劃'}, {word: 'pastry', meaning: '糕點'}, {word: 'bittersweet', meaning: '苦樂參半'}, {word: 'caretakers', meaning: '看護人'}, {word: 'tough', meaning: '堅強'}, {word: 'challenges', meaning: '挑戰'}, {word: 'creative', meaning: '創意'}, {word: 'memories', meaning: '回憶'}, {word: 'bakery', meaning: '麵包店'}, {word: 'eye-opening', meaning: '開眼界'}, {word: 'region', meaning: '地區'}, {word: 'Taliban', meaning: '塔利班'}, {word: 'destroyed', meaning: '摧毀'}, {word: 'pen name', meaning: '筆名'}, {word: 'survive', meaning: '倖存'}, {word: 'operations', meaning: '手術'}, {word: 'detective', meaning: '偵探'}, {word: 'suspect', meaning: '懷疑'}, {word: 'diamond necklace', meaning: '鑽石項鍊'}, {word: 'display box', meaning: '展示盒'}, {word: 'charity ball', meaning: '慈善舞會'}, {word: 'striped suit', meaning: '條紋西裝'}, {word: 'blackout', meaning: '停電'}, {word: 'waiter', meaning: '侍應'}, {word: 'magician', meaning: '魔術師'}, {word: 'frightening', meaning: '驚恐'}, {word: 'rush hour', meaning: '繁忙時間'}, {word: 'amber', meaning: '琥珀色'}, {word: 'bumper car', meaning: '碰碰車'}, {word: 'passengers', meaning: '乘客'}, {word: 'awful', meaning: '可怕'}, {word: 'hotline', meaning: '熱線'}, {word: 'co-workers', meaning: '同事'}, {word: 'alarm clocks', meaning: '鬧鐘'}, {word: 'awards ceremony', meaning: '頒獎典禮'}, {word: 'runner-up', meaning: '亞軍'}, {word: 'bulky', meaning: '龐大'}, {word: 'grab pole', meaning: '扶手桿'}, {word: 'priority seats', meaning: '優先座位'}, {word: 'considerate', meaning: '體貼'}, {word: 'wheelchair', meaning: '輪椅'}, {word: 'appreciation', meaning: '欣賞'}, {word: 'transfer', meaning: '轉乘'}, {word: 'concourse', meaning: '大堂'}, {word: 'valuable', meaning: '有價值'}, {word: 'cockroach', meaning: '蟑螂'}, {word: 'spilt', meaning: '灑出'}, {word: 'baking soda', meaning: '梳打粉'}, {word: 'vinegar', meaning: '醋'}
+];
+
+// ===== 小六：50個最難生字（新增）=====
+const extraWordsP6 = [
+  {word: 'adventurous', meaning: '愛冒險的'}, {word: 'thrilled', meaning: '非常興奮的'}, {word: 'determined', meaning: '下定決心的'}, {word: 'eco-tour', meaning: '生態旅遊'}, {word: 'cuisines', meaning: '菜餚'}, {word: 'rapids', meaning: '急流'}, {word: 'wildlife', meaning: '野生動物'}, {word: 'cruise', meaning: '巡遊'}, {word: 'adopt', meaning: '領養'}, {word: 'stray', meaning: '流浪的'}, {word: 'abandon', meaning: '遺棄'}, {word: 'puppy', meaning: '小狗'}, {word: 'kitten', meaning: '小貓'}, {word: 'scratch', meaning: '抓'}, {word: 'vet', meaning: '獸醫'}, {word: 'injections', meaning: '注射'}, {word: 'balcony', meaning: '陽台'}, {word: 'needy', meaning: '貧困的'}, {word: 'walkathon', meaning: '步行馬拉松'}, {word: 'sponsor', meaning: '贊助人'}, {word: 'deadline', meaning: '截止日期'}, {word: 'fund-raising', meaning: '籌款'}, {word: 'donors', meaning: '捐贈者'}, {word: 'raffle', meaning: '抽獎'}, {word: 'residents', meaning: '居民'}, {word: 'energetic', meaning: '精力充沛的'}, {word: 'peacock', meaning: '孔雀'}, {word: 'herbal', meaning: '草藥的'}, {word: 'talkative', meaning: '多話的'}, {word: 'humorous', meaning: '幽默的'}, {word: 'illnesses', meaning: '疾病'}, {word: 'injuries', meaning: '傷害'}, {word: 'specialists', meaning: '專家'}, {word: 'wards', meaning: '病房'}, {word: 'entertain', meaning: '娛樂'}, {word: 'admitted', meaning: '收治（入院）'}, {word: 'bruises', meaning: '瘀傷'}, {word: 'sling', meaning: '吊帶'}, {word: 'cast', meaning: '石膏'}, {word: 'lungs', meaning: '肺'}, {word: 'disaster', meaning: '災難'}, {word: 'storyline', meaning: '故事情節'}, {word: 'landslides', meaning: '山泥傾瀉'}, {word: 'flash flood', meaning: '暴洪'}, {word: 'tornado', meaning: '龍捲風'}, {word: 'heroine', meaning: '女主角'}, {word: 'urge', meaning: '催促'}, {word: 'realistic', meaning: '逼真的'}, {word: 'endangered', meaning: '瀕危的'}, {word: 'habitats', meaning: '棲息地'}
+];
+
+// 生成題目的函數
+function generateExtraQuestions(words) {
+  const allMeanings = words.map(w => w.meaning);
+  let questions = [];
+  words.forEach(w => {
+    let otherMeanings = allMeanings.filter(m => m !== w.meaning);
+    otherMeanings = otherMeanings.sort(() => Math.random() - 0.5);
+    let options = otherMeanings.slice(0, 3);
+    let correctIndex = Math.floor(Math.random() * 4);
+    options.splice(correctIndex, 0, w.meaning);
+    let optionsWithLetter = options.map((opt, i) => `${String.fromCharCode(65+i)}. ${opt}`);
+    let correctAnswer = optionsWithLetter[correctIndex];
+    questions.push({
+      question: `單詞 '${w.word}' 的中文意思是？`,
+      options: optionsWithLetter,
+      correctAnswer: correctAnswer
+    });
+  });
+  return questions;
+}
+
+// 將生成的題目加入到對應類別（增加，不替換）
+quizQuestions.category4 = quizQuestions.category4.concat(generateExtraQuestions(extraWordsP4));
+quizQuestions.category5 = quizQuestions.category5.concat(generateExtraQuestions(extraWords));
+quizQuestions.category6 = quizQuestions.category6.concat(generateExtraQuestions(extraWordsP6));
+// ===== 新增結束 =====
+
+const bgThemes = [
+  "linear-gradient(180deg, #a8e0ff, #8ee3f5, #f9f9f9)",
+  "linear-gradient(180deg, #ffecd2, #fcb69f)",
+  "linear-gradient(180deg, #c9ffbf, #ffafbd)",
+  "linear-gradient(180deg, #f6d365, #fda085)",
+  "linear-gradient(180deg, #89f7fe, #66a6ff)",
+  "linear-gradient(180deg, #ff9a9e, #fecfef, #fe99a7)"
+];
+const $ = id => document.getElementById(id);
+let selectedCategories = new Set();
+let selectedQuestions = [];
+let current = 0, score = 0, wrongAnswers = [];
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+function speakZh(t) {
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = "zh-HK"; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+function speakEn(t) {
+  const u = new SpeechSynthesisUtterance(t);
+  u.lang = "en-US"; u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+function changeBackground() {
+  document.body.style.background = bgThemes[Math.floor(Math.random() * bgThemes.length)];
+}
+function showScreen(screenName) {
+  document.querySelectorAll('#game-container > div').forEach(div => div.classList.add('hidden'));
+  $(screenName).classList.remove('hidden');
+}
+function toggleCategory(categoryNumber) {
+  const checkbox = $(`category${categoryNumber}`);
+  const card = checkbox.parentElement;
+  if (selectedCategories.has(categoryNumber)) {
+    selectedCategories.delete(categoryNumber);
+    card.classList.remove('selected');
+    checkbox.checked = false;
+  } else {
+    selectedCategories.add(categoryNumber);
+    card.classList.add('selected');
+    checkbox.checked = true;
+  }
+  updateSelectionCount();
+  updateStartButton();
+}
+function updateSelectionCount() { $('selected-count').textContent = selectedCategories.size; }
+function updateStartButton() { $('start-quiz-btn').disabled = selectedCategories.size === 0; }
+function startQuiz() {
+  if (selectedCategories.size === 0) return;
+  let allQuestions = [];
+  selectedCategories.forEach(cat => { allQuestions = allQuestions.concat(quizQuestions[`category${cat}`]); });
+  selectedQuestions = shuffle([...allQuestions]).slice(0, 10);
+  current = 0; score = 0; wrongAnswers = [];
+  showScreen('quiz-screen');
+  showQuestion();
+}
+function showQuestion() {
+  changeBackground();
+  const q = selectedQuestions[current];
+  $('question').textContent = q.question;
+  $('options').innerHTML = '';
+  q.options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(opt);
+    $('options').appendChild(btn);
+  });
+  $('result').textContent = '';
+  $('next-btn').classList.add('hidden');
+  $('scoreboard').textContent = `進度：${current + 1}/${selectedQuestions.length}`;
+}
+function checkAnswer(selected) {
+  const q = selectedQuestions[current];
+  const wordMatch = q.question.match(/'([^']+)'/);
+  const word = wordMatch ? wordMatch[1] : '該單詞';
+  const correctChinese = q.correctAnswer.split('. ')[1] || q.correctAnswer;
+  if (selected === q.correctAnswer) {
+    score++;
+    $('result').textContent = '✅ 答啱左！';
+    speakZh('答啱左！');
+  } else {
+    $('result').textContent = `❌ 錯！正確答案係：${q.correctAnswer}`;
+    speakZh(`錯！正確答案係 ${correctChinese}`);
+    wrongAnswers.push({ question: q.question, word: word, correctAnswer: q.correctAnswer, correctChinese: correctChinese, selectedAnswer: selected });
+  }
+  $('next-btn').classList.remove('hidden');
+}
+$('start-btn').onclick = () => showScreen('category-screen');
+$('start-quiz-btn').onclick = startQuiz;
+$('speak-word').onclick = () => {
+  const questionText = selectedQuestions[current].question;
+  const wordMatch = questionText.match(/'([^']+)'/);
+  if (wordMatch) speakEn(wordMatch[1]);
+};
+$('next-btn').onclick = () => {
+  speechSynthesis.cancel();
+  current++;
+  if (current < selectedQuestions.length) showQuestion(); else endGame();
+};
+function endGame() {
+  showScreen('end-screen');
+  $('final-score').textContent = `🏆 你的最終分數：${score}/${selectedQuestions.length}`;
+  if (wrongAnswers.length > 0) {
+    let wrongListHTML = '📝 錯題列表（單詞 = 正確中文意思）：<br><br>';
+    wrongAnswers.forEach((item, index) => { wrongListHTML += `${index + 1}. <strong>${item.word}</strong> = ${item.correctChinese}<br>`; });
+    $('wrong-list').innerHTML = wrongListHTML;
+  } else {
+    $('wrong-list').innerHTML = '🎯 全部答啱，太勁啦！';
+  }
+  speakZh('俾心機，你下次一定可以拎滿分。');
+}
+updateSelectionCount();
+</script>
+</body>
+</html>
